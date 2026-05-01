@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { isAuthorized } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,10 @@ Speak like a trusted personal kitchen helper.`;
 
 export async function POST(request: Request) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: "Cristy's recipe book is locked." }, { status: 401 });
+    }
+
     const body = (await request.json()) as { message?: unknown };
     const message = typeof body.message === "string" ? body.message.trim() : "";
 

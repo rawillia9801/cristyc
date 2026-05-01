@@ -9,6 +9,7 @@ type RecipeModalProps = {
   recipe: Recipe | null;
   onClose: () => void;
   onSave: (recipe: Recipe | RecipeInput) => void;
+  onDelete: (id: string) => void;
 };
 
 const emptyRecipe: RecipeInput = {
@@ -22,7 +23,7 @@ const emptyRecipe: RecipeInput = {
   image_url: ""
 };
 
-export function RecipeModal({ mode, recipe, onClose, onSave }: RecipeModalProps) {
+export function RecipeModal({ mode, recipe, onClose, onSave, onDelete }: RecipeModalProps) {
   const [draft, setDraft] = useState<Recipe | RecipeInput>(recipe ?? emptyRecipe);
   const isView = mode === "view";
 
@@ -121,6 +122,11 @@ export function RecipeModal({ mode, recipe, onClose, onSave }: RecipeModalProps)
           <button type="button" className="modalCancel" onClick={onClose}>
             {isView ? "Close" : "Cancel"}
           </button>
+          {"id" in draft && draft.id && !isView && (
+            <button type="button" className="modalDelete" onClick={() => onDelete(draft.id)}>
+              Delete Recipe
+            </button>
+          )}
           {!isView && <button className="modalSave">{mode === "add" ? "Add Recipe" : "Save Changes"}</button>}
         </div>
       </form>
