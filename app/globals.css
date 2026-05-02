@@ -500,6 +500,8 @@ img {
   background: rgba(255, 253, 246, 0.82);
   box-shadow: 0 12px 24px rgba(69, 62, 42, 0.14);
   backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  text-align: left;
 }
 
 .statCard span {
@@ -734,14 +736,15 @@ img {
   margin-top: 13px;
 }
 
-.carouselControls span {
+.carouselControls .dot {
   width: 7px;
   height: 7px;
+  padding: 0;
   border-radius: 50%;
   background: #d9c49c;
 }
 
-.carouselControls span.active {
+.carouselControls .dot.active {
   width: 20px;
   border-radius: 99px;
   background: #5f91a0;
@@ -753,6 +756,12 @@ img {
   color: #4d6d75;
   border-radius: 50%;
   background: #f4e7cc;
+}
+
+.carouselControls .dot {
+  height: 7px;
+  width: 7px;
+  min-width: 7px;
 }
 
 .chefPanel {
@@ -956,12 +965,22 @@ img {
   transform: rotate(-1.5deg);
 }
 
-.stickyNote p {
+.stickyNote p,
+.stickyNote button {
   margin: 0 0 10px;
   color: #826239;
   font-family: Caveat, cursive;
   font-size: 21px;
   line-height: 0.96;
+}
+
+.stickyNote button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
 }
 
 .stickyNote svg {
@@ -993,18 +1012,58 @@ img {
 }
 
 .softError,
+.activeViewBanner,
 .loadingText {
   color: #8b563f;
   font-size: 12px;
   font-weight: 900;
 }
 
-.softError {
+.softError,
+.activeViewBanner {
   margin: 12px 4px 0;
   padding: 10px 13px;
   border: 1px solid rgba(199, 125, 101, 0.35);
   border-radius: 14px;
   background: rgba(255, 244, 231, 0.86);
+}
+
+.activeViewBanner {
+  color: #45636a;
+  border-color: rgba(111, 159, 173, 0.36);
+  background: rgba(255, 253, 246, 0.76);
+}
+
+.emptyPanel {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 11px;
+  padding: 22px;
+  color: #657171;
+  text-align: center;
+}
+
+.emptyPanel p {
+  margin: 0;
+  color: #52686c;
+  font-weight: 900;
+}
+
+.emptyPanel button {
+  min-height: 36px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 13px;
+  color: white;
+  background: #47788a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.featuredEmpty {
+  min-height: 380px;
 }
 
 .lockScreen {

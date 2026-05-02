@@ -12,10 +12,13 @@ type RecipeCardProps = {
 
 const categoryClass: Record<Recipe["category"], string> = {
   Breakfast: "badgeBreakfast",
+  Lunch: "badgeDinner",
   Dinner: "badgeDinner",
   Dessert: "badgeDessert",
   Holiday: "badgeHoliday",
-  Southern: "badgeSouthern"
+  Southern: "badgeSouthern",
+  Soup: "badgeDinner",
+  Lemon: "badgeBreakfast"
 };
 
 export function RecipeCard({ recipe, onView, onEdit, onDelete }: RecipeCardProps) {

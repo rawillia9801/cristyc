@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
   BookHeart,
-  Bookmark,
   CalendarDays,
   ChefHat,
   ChevronDown,
@@ -30,7 +29,6 @@ import {
   NotebookPen,
   Plus,
   Search,
-  Send,
   Settings,
   Shell,
   ShoppingBasket,
@@ -44,74 +42,20 @@ import {
 } from "lucide-react";
 import { ClaudeChef } from "@/components/ClaudeChef";
 import { RecipeModal } from "@/components/RecipeModal";
-import { categories, type Recipe, type RecipeCategory, type RecipeInput } from "@/data/recipes";
+import {
+  categories,
+  type Recipe,
+  type RecipeCategory,
+  type RecipeCategoryMeta,
+  type RecipeCollection,
+  type RecipeInput,
+  type RecipeNote,
+  type ShoppingItem
+} from "@/data/recipes";
 
 type AuthState = "checking" | "locked" | "unlocked";
 
 const SESSION_KEY = "cristy-recipe-session";
-
-const fallbackRecipes: Recipe[] = [
-  {
-    id: "sample-1",
-    title: "Creamy Garlic Parmesan Pasta",
-    category: "Dinner",
-    cook_time: "35 min",
-    serves: "Serves 4",
-    description: "Silky, golden, and exactly the sort of bowl that makes an ordinary evening feel looked after.",
-    ingredients: "Pasta\nParmesan\nCream\nGarlic\nSpinach\nLemon",
-    instructions: "Boil pasta until tender. Simmer garlic with cream, parmesan, and lemon. Toss with pasta and spinach.",
-    image_url: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=900&q=85",
-    created_at: "2026-04-30T12:00:00Z"
-  },
-  {
-    id: "sample-2",
-    title: "Lemon Blueberry Cheesecake",
-    category: "Dessert",
-    cook_time: "1 hr",
-    serves: "Serves 8",
-    description: "Bright lemon, velvety filling, and a berry swirl that tastes like a handwritten summer note.",
-    ingredients: "Cream cheese\nBlueberries\nLemon\nGraham crackers\nSugar",
-    instructions: "Press crust, blend filling, swirl berries, and bake gently until just set.",
-    image_url: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=900&q=85",
-    created_at: "2026-04-29T12:00:00Z"
-  },
-  {
-    id: "sample-3",
-    title: "Sunday Herb Roast Chicken",
-    category: "Southern",
-    cook_time: "1 hr 20 min",
-    serves: "Serves 6",
-    description: "Crisp skin, tender potatoes, and a lemony pan sauce worth saving for bread.",
-    ingredients: "Chicken\nPotatoes\nRosemary\nThyme\nLemon\nButter",
-    instructions: "Season chicken, tuck herbs under the skin, roast with potatoes, and rest before serving.",
-    image_url: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?auto=format&fit=crop&w=900&q=85",
-    created_at: "2026-04-28T12:00:00Z"
-  },
-  {
-    id: "sample-4",
-    title: "Mango Sunrise Smoothie",
-    category: "Breakfast",
-    cook_time: "10 min",
-    serves: "Serves 2",
-    description: "Creamy mango, orange, and yogurt for a bright little start to the day.",
-    ingredients: "Mango\nOrange juice\nGreek yogurt\nHoney\nIce",
-    instructions: "Blend everything until smooth and pour into chilled glasses.",
-    image_url: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?auto=format&fit=crop&w=900&q=85",
-    created_at: "2026-04-27T12:00:00Z"
-  },
-  {
-    id: "sample-5",
-    title: "Pomegranate Chicken Pilaf",
-    category: "Holiday",
-    cook_time: "55 min",
-    serves: "Serves 5",
-    description: "Fragrant rice, jeweled pomegranate, and warm spices for a table that feels special.",
-    ingredients: "Chicken\nRice\nPomegranate\nAlmonds\nCinnamon\nParsley",
-    instructions: "Brown chicken, toast rice with spices, simmer together, and finish with herbs and pomegranate.",
-    image_url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=85",
-    created_at: "2026-04-26T12:00:00Z"
-  }
-];
 
 const navGroups = [
   { label: "Home", items: [{ label: "Dashboard", icon: HomeIcon }] },
@@ -145,17 +89,36 @@ const navGroups = [
   }
 ];
 
-const categoryCards = [
-  { name: "Breakfast", icon: Coffee, image: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=240&q=80" },
-  { name: "Lunch", icon: Utensils, image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=240&q=80" },
-  { name: "Dinner", icon: ChefHat, image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=240&q=80" },
-  { name: "Desserts", icon: Cookie, image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=240&q=80" },
-  { name: "Lemons", icon: Sparkles, image: "https://images.unsplash.com/photo-1587324438673-56c78a866b15?auto=format&fit=crop&w=240&q=80" },
-  { name: "Soups", icon: Utensils, image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=240&q=80" }
-];
+const categoryIconMap = {
+  Breakfast: Coffee,
+  Lunch: Utensils,
+  Dinner: ChefHat,
+  Dessert: Cookie,
+  Holiday: Sparkles,
+  Southern: Heart,
+  Soup: Utensils,
+  Lemon: Sparkles
+} satisfies Record<RecipeCategory, typeof Coffee>;
 
-const shoppingItems = ["Chicken breast", "Fresh lemons", "Parmesan cheese", "Blueberries", "Baby spinach", "Heavy cream"];
-const noteLines = ["Don't forget to buy flowers!", "Try fresh sea salt on roasted carrots.", "Mom likes almond in the biscotti."];
+const categoryImageFallbacks: Record<RecipeCategory, string> = {
+  Breakfast: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=240&q=80",
+  Lunch: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=240&q=80",
+  Dinner: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=240&q=80",
+  Dessert: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=240&q=80",
+  Holiday: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=240&q=80",
+  Southern: "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=240&q=80",
+  Soup: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=240&q=80",
+  Lemon: "https://images.unsplash.com/photo-1587324438673-56c78a866b15?auto=format&fit=crop&w=240&q=80"
+};
+
+type DashboardResponse = {
+  recipes?: Recipe[];
+  notes?: RecipeNote[];
+  shoppingItems?: ShoppingItem[];
+  collections?: RecipeCollection[];
+  categories?: RecipeCategoryMeta[];
+  error?: string;
+};
 
 function todayLabel() {
   return new Intl.DateTimeFormat("en-US", {
@@ -172,13 +135,20 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [notes, setNotes] = useState<RecipeNote[]>([]);
+  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
+  const [collections, setCollections] = useState<RecipeCollection[]>([]);
+  const [categoryMetas, setCategoryMetas] = useState<RecipeCategoryMeta[]>([]);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<RecipeCategory | "All">("All");
+  const [activeView, setActiveView] = useState("Dashboard");
   const [modalMode, setModalMode] = useState<"add" | "edit" | "view" | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem(SESSION_KEY);
@@ -224,22 +194,34 @@ export default function Home() {
     setSessionToken("");
     setAuthState("locked");
     setRecipes([]);
+    setNotes([]);
+    setShoppingItems([]);
+    setCollections([]);
+    setCategoryMetas([]);
   }
 
   async function fetchRecipes(token = sessionToken) {
     setIsLoading(true);
     setErrorMessage("");
 
-    const response = await fetch("/api/recipes", {
+    const response = await fetch("/api/dashboard", {
       headers: { "x-cristy-session": token }
     });
 
-    const data = (await response.json()) as { recipes?: Recipe[]; error?: string };
+    const data = (await response.json()) as DashboardResponse;
     if (!response.ok) {
       setErrorMessage(data.error ?? "The recipe box could not be opened.");
-      setRecipes(fallbackRecipes);
+      setRecipes([]);
+      setNotes([]);
+      setShoppingItems([]);
+      setCollections([]);
+      setCategoryMetas([]);
     } else {
-      setRecipes(data.recipes?.length ? data.recipes : fallbackRecipes);
+      setRecipes(data.recipes ?? []);
+      setNotes(data.notes ?? []);
+      setShoppingItems(data.shoppingItems ?? []);
+      setCollections(data.collections ?? []);
+      setCategoryMetas(data.categories ?? []);
     }
 
     setIsLoading(false);
@@ -254,16 +236,32 @@ export default function Home() {
     });
   }, [recipes, query, activeCategory]);
 
-  const featuredRecipe = filteredRecipes[0] ?? fallbackRecipes[0];
+  useEffect(() => {
+    setFeaturedIndex(0);
+  }, [activeCategory, query]);
+
+  const favoriteRecipes = filteredRecipes.filter((recipe) => recipe.is_favorite);
+  const featuredRecipes = favoriteRecipes.length ? favoriteRecipes : filteredRecipes;
+  const featuredRecipe = featuredRecipes[featuredIndex] ?? null;
   const recentRecipes = filteredRecipes.slice(0, 7);
 
   const stats = [
-    { label: "Saved Recipes", count: recipes.length || 128, subtitle: "All treasured dishes", icon: BookHeart },
-    { label: "Family Favorites", count: Math.max(18, Math.round((recipes.length || 128) * 0.28)), subtitle: "Recipes worth repeating", icon: Heart },
-    { label: "Recipe Collections", count: 12, subtitle: "Gathered by mood", icon: LibraryBig },
-    { label: "Kitchen Notes", count: 73, subtitle: "Little cooking memories", icon: NotebookPen },
+    { label: "Saved Recipes", count: recipes.length, subtitle: "All treasured dishes", icon: BookHeart },
+    { label: "Family Favorites", count: recipes.filter((recipe) => recipe.is_favorite).length, subtitle: "Recipes worth repeating", icon: Heart },
+    { label: "Recipe Collections", count: collections.length, subtitle: "Gathered by mood", icon: LibraryBig },
+    { label: "Kitchen Notes", count: notes.length, subtitle: "Little cooking memories", icon: NotebookPen },
     { label: "Shopping Items", count: shoppingItems.length, subtitle: "Ready for the market", icon: ListChecks }
   ];
+
+  const displayCategories = categoryMetas.length
+    ? categoryMetas
+    : categories.map((category, index) => ({
+        id: category,
+        name: category,
+        image_url: categoryImageFallbacks[category],
+        icon: null,
+        sort_order: index
+      }));
 
   function openAdd() {
     setSelectedRecipe(null);
@@ -316,6 +314,135 @@ export default function Home() {
     }
 
     await fetchRecipes();
+  }
+
+  function handleNavClick(label: string) {
+    setActiveView(label);
+    setMenuOpen(false);
+
+    if (label === "Dashboard" || label === "All Recipes") {
+      setActiveCategory("All");
+    }
+
+    if (label === "Favorites") {
+      setActiveView("Family Favorites");
+    }
+
+    if (label === "Categories") {
+      setShowFilters(true);
+    }
+
+    if (label === "Shopping Lists") {
+      document.querySelector(".shoppingPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (label === "Notes") {
+      document.querySelector(".notesPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  function openStat(label: string) {
+    setActiveView(label);
+    if (label === "Saved Recipes") {
+      setActiveCategory("All");
+    }
+    if (label === "Family Favorites") {
+      setActiveCategory("All");
+    }
+    if (label === "Kitchen Notes") {
+      document.querySelector(".notesPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    if (label === "Shopping Items") {
+      document.querySelector(".shoppingPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  function moveFeatured(direction: -1 | 1) {
+    if (!featuredRecipes.length) {
+      return;
+    }
+
+    setFeaturedIndex((current) => (current + direction + featuredRecipes.length) % featuredRecipes.length);
+  }
+
+  async function addNote() {
+    const body = window.prompt("Add a quick kitchen note");
+    if (!body?.trim()) {
+      return;
+    }
+
+    const response = await fetch("/api/notes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cristy-session": sessionToken
+      },
+      body: JSON.stringify({ body })
+    });
+
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setErrorMessage(data.error ?? "This note could not be saved.");
+      return;
+    }
+
+    await fetchRecipes();
+  }
+
+  async function deleteNote(id: string) {
+    const response = await fetch(`/api/notes?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { "x-cristy-session": sessionToken }
+    });
+
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setErrorMessage(data.error ?? "This note could not be deleted.");
+      return;
+    }
+
+    await fetchRecipes();
+  }
+
+  async function addShoppingItem() {
+    const label = window.prompt("Add a shopping item");
+    if (!label?.trim()) {
+      return;
+    }
+
+    const response = await fetch("/api/shopping-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cristy-session": sessionToken
+      },
+      body: JSON.stringify({ label })
+    });
+
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setErrorMessage(data.error ?? "This shopping item could not be saved.");
+      return;
+    }
+
+    await fetchRecipes();
+  }
+
+  async function toggleShoppingItem(item: ShoppingItem, checked: boolean) {
+    setShoppingItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, checked } : entry)));
+
+    const response = await fetch("/api/shopping-items", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cristy-session": sessionToken
+      },
+      body: JSON.stringify({ id: item.id, checked })
+    });
+
+    if (!response.ok) {
+      await fetchRecipes();
+    }
   }
 
   return (
@@ -393,7 +520,11 @@ export default function Home() {
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <button key={item.label} className={item.label === "Dashboard" ? "active" : ""}>
+                      <button
+                        key={item.label}
+                        className={activeView === item.label || (item.label === "Dashboard" && activeView === "Dashboard") ? "active" : ""}
+                        onClick={() => handleNavClick(item.label)}
+                      >
                         <Icon size={16} />
                         {item.label}
                       </button>
@@ -431,11 +562,11 @@ export default function Home() {
                   <Plus size={15} />
                   Add New Recipe
                 </button>
-                <button className="iconButton" aria-label="Recipe reminders">
+                <button className="iconButton" aria-label="Recipe reminders" onClick={() => setActiveView("Kitchen Notes")}>
                   <Bell size={17} />
                   <span />
                 </button>
-                <button className="profileButton" aria-label="Cristy profile menu">
+                <button className="profileButton" aria-label="Cristy profile menu" onClick={() => setActiveView("Profile")}>
                   <span className="smallAvatar">C</span>
                   Cristy
                   <ChevronDown size={14} />
@@ -464,7 +595,7 @@ export default function Home() {
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search recipes, ingredients, categories..."
                   />
-                  <button type="button">
+                  <button type="button" onClick={() => setShowFilters((current) => !current)}>
                     <Filter size={15} />
                     Filter
                   </button>
@@ -475,9 +606,10 @@ export default function Home() {
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
                   return (
-                    <motion.article
+                    <motion.button
                       key={stat.label}
                       className="statCard"
+                      onClick={() => openStat(stat.label)}
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
@@ -490,15 +622,16 @@ export default function Home() {
                         <p>{stat.label}</p>
                         <small>{stat.subtitle}</small>
                       </div>
-                    </motion.article>
+                    </motion.button>
                   );
                 })}
               </section>
             </header>
 
             {errorMessage && <div className="softError">{errorMessage}</div>}
+            {activeView !== "Dashboard" && <div className="activeViewBanner">Showing: {activeView}</div>}
 
-            <div className="categoryFilter" aria-label="Filter recipes by category">
+            {showFilters && <div className="categoryFilter" aria-label="Filter recipes by category">
               <button className={activeCategory === "All" ? "active" : ""} onClick={() => setActiveCategory("All")}>
                 All
               </button>
@@ -511,7 +644,7 @@ export default function Home() {
                   {category}
                 </button>
               ))}
-            </div>
+            </div>}
 
             <section className="contentGrid">
               <article className="panel recentPanel">
@@ -532,40 +665,62 @@ export default function Home() {
                         <Heart size={17} fill="#db7d73" />
                       </button>
                     ))}
+                  {!isLoading && recentRecipes.length === 0 && (
+                    <div className="emptyPanel">
+                      <BookHeart size={24} />
+                      <p>No recipes found yet.</p>
+                      <button onClick={openAdd}>Add New Recipe</button>
+                    </div>
+                  )}
                 </div>
               </article>
 
               <article className="panel featuredPanel">
                 <div className="panelHeader">
                   <h2>My Favorite Recipes</h2>
-                  <button onClick={() => openView(featuredRecipe)}>View</button>
+                  <button onClick={() => (featuredRecipe ? openView(featuredRecipe) : openAdd())}>{featuredRecipe ? "View" : "Add"}</button>
                 </div>
-                <img className="featuredImage" src={featuredRecipe.image_url} alt="" />
-                <div className="featuredBody">
-                  <span className="recipeTag">{featuredRecipe.category}</span>
-                  <h2>{featuredRecipe.title}</h2>
-                  <p>{featuredRecipe.description}</p>
-                  <div className="stars" aria-label="Five star favorite">
-                    {[0, 1, 2, 3, 4].map((star) => (
-                      <Star key={star} size={16} fill="currentColor" />
-                    ))}
+                {featuredRecipe ? (
+                  <>
+                    <img className="featuredImage" src={featuredRecipe.image_url} alt="" />
+                    <div className="featuredBody">
+                      <span className="recipeTag">{featuredRecipe.category}</span>
+                      <h2>{featuredRecipe.title}</h2>
+                      <p>{featuredRecipe.description}</p>
+                      <div className="stars" aria-label={`${featuredRecipe.rating ?? 5} star favorite`}>
+                        {[0, 1, 2, 3, 4].map((star) => (
+                          <Star key={star} size={16} fill={star < (featuredRecipe.rating ?? 5) ? "currentColor" : "none"} />
+                        ))}
+                      </div>
+                      <div className="featuredActions">
+                        <button onClick={() => openView(featuredRecipe)}>Open Recipe</button>
+                        <button onClick={() => openEdit(featuredRecipe)}>Edit</button>
+                      </div>
+                      <div className="carouselControls">
+                        <button aria-label="Previous favorite" onClick={() => moveFeatured(-1)}>
+                          <ChevronLeft size={17} />
+                        </button>
+                        {featuredRecipes.slice(0, 5).map((recipe, index) => (
+                          <button
+                            key={recipe.id}
+                            className={index === featuredIndex ? "dot active" : "dot"}
+                            aria-label={`Show ${recipe.title}`}
+                            onClick={() => setFeaturedIndex(index)}
+                          />
+                        ))}
+                        <button aria-label="Next favorite" onClick={() => moveFeatured(1)}>
+                          <ChevronRight size={17} />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="emptyPanel featuredEmpty">
+                    <Heart size={28} />
+                    <p>Add a favorite recipe to feature it here.</p>
+                    <button onClick={openAdd}>Add New Recipe</button>
                   </div>
-                  <div className="featuredActions">
-                    <button onClick={() => openView(featuredRecipe)}>Open Recipe</button>
-                    <button onClick={() => openEdit(featuredRecipe)}>Edit</button>
-                  </div>
-                  <div className="carouselControls">
-                    <button aria-label="Previous favorite">
-                      <ChevronLeft size={17} />
-                    </button>
-                    <span className="active" />
-                    <span />
-                    <span />
-                    <button aria-label="Next favorite">
-                      <ChevronRight size={17} />
-                    </button>
-                  </div>
-                </div>
+                )}
               </article>
 
               <ClaudeChef sessionToken={sessionToken} />
@@ -575,14 +730,14 @@ export default function Home() {
               <article className="panel categoryPanel">
                 <div className="panelHeader">
                   <h2>Categories</h2>
-                  <button>View</button>
+                  <button onClick={() => setShowFilters((current) => !current)}>View</button>
                 </div>
                 <div className="categoryBubbles">
-                  {categoryCards.map((category) => {
-                    const Icon = category.icon;
+                  {displayCategories.map((category) => {
+                    const Icon = categoryIconMap[category.name] ?? Tags;
                     return (
-                      <button key={category.name}>
-                        <img src={category.image} alt="" />
+                      <button key={category.id} onClick={() => setActiveCategory(category.name)}>
+                        <img src={category.image_url ?? categoryImageFallbacks[category.name]} alt="" />
                         <span>
                           <Icon size={14} />
                         </span>
@@ -596,14 +751,17 @@ export default function Home() {
               <article className="panel notesPanel">
                 <div className="panelHeader">
                   <h2>Quick Notes</h2>
-                  <button>
+                  <button onClick={addNote} aria-label="Add note">
                     <NotebookPen size={14} />
                   </button>
                 </div>
                 <div className="stickyNote">
-                  {noteLines.map((note) => (
-                    <p key={note}>{note}</p>
+                  {notes.slice(0, 4).map((note) => (
+                    <button key={note.id} onClick={() => void deleteNote(note.id)} title="Click to remove note">
+                      {note.body}
+                    </button>
                   ))}
+                  {notes.length === 0 && <p>Add a kitchen note with the pencil button.</p>}
                   <Heart size={20} fill="#d77c6e" />
                 </div>
               </article>
@@ -611,17 +769,22 @@ export default function Home() {
               <article className="panel shoppingPanel">
                 <div className="panelHeader">
                   <h2>Shopping List</h2>
-                  <button>
+                  <button onClick={addShoppingItem} aria-label="Add shopping item">
                     <ClipboardList size={14} />
                   </button>
                 </div>
                 <div className="checkList">
-                  {shoppingItems.map((item, index) => (
-                    <label key={item}>
-                      <input type="checkbox" defaultChecked={index < 2} />
-                      <span>{item}</span>
+                  {shoppingItems.map((item) => (
+                    <label key={item.id}>
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={(event) => void toggleShoppingItem(item, event.target.checked)}
+                      />
+                      <span>{item.label}</span>
                     </label>
                   ))}
+                  {shoppingItems.length === 0 && <p className="loadingText">Add shopping items with the list button.</p>}
                 </div>
               </article>
             </section>

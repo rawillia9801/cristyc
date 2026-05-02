@@ -5,7 +5,8 @@ import { type Recipe, type RecipeInput } from "@/data/recipes";
 
 export const runtime = "nodejs";
 
-const recipeFields = "id,title,category,ingredients,instructions,image_url,cook_time,serves,description,created_at";
+const recipeFields =
+  "id,title,category,ingredients,instructions,image_url,cook_time,serves,description,is_favorite,collection_id,rating,created_at,updated_at";
 
 function unauthorized() {
   return NextResponse.json({ error: "Cristy's recipe book is locked." }, { status: 401 });
@@ -22,7 +23,10 @@ function toRecipeInput(body: Partial<Recipe>): RecipeInput {
       "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=900&q=85",
     cook_time: body.cook_time ?? "",
     serves: body.serves ?? "",
-    description: body.description ?? ""
+    description: body.description ?? "",
+    is_favorite: body.is_favorite ?? false,
+    collection_id: body.collection_id ?? null,
+    rating: body.rating ?? null
   };
 }
 
