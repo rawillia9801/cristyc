@@ -36,16 +36,29 @@ export async function PUT(request: Request) {
     return unauthorized();
   }
 
-  const body = (await request.json()) as { id?: unknown; checked?: unknown };
+  const body = (await request.json()) as { id?: unknown; label?: unknown; checked?: unknown; category?: unknown };
   const id = typeof body.id === "string" ? body.id : "";
-  const checked = typeof body.checked === "boolean" ? body.checked : null;
+  const label = typeof body.label === "string" ? body.label.trim() : undefined;
+  const checked = typeof body.checked === "boolean" ? body.checked : undefined;
+  const category = typeof body.category === "string" ? body.category.trim() : undefined;
 
-  if (!id || checked === null) {
-    return NextResponse.json({ error: "Shopping item id and checked state are required." }, { status: 400 });
+  if (!id || (label === undefined && checked === undefined && category === undefined)) {
+    return NextResponse.json({ error: "Shopping item id and at least one change are required." }, { status: 400 });
+  }
+
+  if (label !== undefined && !label) {
+    return NextResponse.json({ error: "Shopping item text is required." }, { status: 400 });
   }
 
   const supabase = createSupabaseAdmin();
-  const { error } = await supabase.from("shopping_items").update({ checked }).eq("id", id);
+  const { error } = await supabase
+    .from("shopping_items")
+    .update({
+      ...(label === undefined ? {} : { label }),
+      ...(checked === undefined ? {} : { checked }),
+      ...(category === undefined ? {} : { category })
+    })
+    .eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

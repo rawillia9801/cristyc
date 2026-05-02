@@ -30,6 +30,33 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true });
 }
 
+export async function PUT(request: Request) {
+  if (!isAuthorized(request)) {
+    return unauthorized();
+  }
+
+  const body = (await request.json()) as { id?: unknown; body?: unknown; pinned?: unknown };
+  const id = typeof body.id === "string" ? body.id : "";
+  const noteBody = typeof body.body === "string" ? body.body.trim() : "";
+  const pinned = typeof body.pinned === "boolean" ? body.pinned : undefined;
+
+  if (!id || !noteBody) {
+    return NextResponse.json({ error: "Note id and text are required." }, { status: 400 });
+  }
+
+  const supabase = createSupabaseAdmin();
+  const { error } = await supabase
+    .from("recipe_notes")
+    .update({ body: noteBody, ...(pinned === undefined ? {} : { pinned }) })
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(request: Request) {
   if (!isAuthorized(request)) {
     return unauthorized();
