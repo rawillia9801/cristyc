@@ -42,6 +42,14 @@ create table if not exists public.recipes (
   updated_at timestamptz not null default now()
 );
 
+alter table public.recipes add column if not exists is_favorite boolean not null default false;
+alter table public.recipes add column if not exists collection_id uuid references public.recipe_collections(id) on delete set null;
+alter table public.recipes add column if not exists rating integer check (rating is null or rating between 1 and 5);
+alter table public.recipes add column if not exists updated_at timestamptz not null default now();
+alter table public.recipes alter column is_favorite set default false;
+update public.recipes set is_favorite = false where is_favorite is null;
+update public.recipes set updated_at = created_at where updated_at is null;
+
 drop trigger if exists set_recipes_updated_at on public.recipes;
 create trigger set_recipes_updated_at
 before update on public.recipes
