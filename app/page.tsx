@@ -200,6 +200,19 @@ export default function Home() {
     setCategoryMetas([]);
   }
 
+  function expireSession(message = "Please unlock Cristy's recipe book again.") {
+    window.localStorage.removeItem(SESSION_KEY);
+    setSessionToken("");
+    setRecipes([]);
+    setNotes([]);
+    setShoppingItems([]);
+    setCollections([]);
+    setCategoryMetas([]);
+    setIsLoading(false);
+    setAuthError(message);
+    setAuthState("locked");
+  }
+
   async function fetchRecipes(token = sessionToken) {
     setIsLoading(true);
     setErrorMessage("");
@@ -210,6 +223,11 @@ export default function Home() {
 
     const data = (await response.json()) as DashboardResponse;
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession("Your saved session expired. Enter the password again.");
+        return;
+      }
+
       setErrorMessage(data.error ?? "The recipe box could not be opened.");
       setRecipes([]);
       setNotes([]);
@@ -292,6 +310,11 @@ export default function Home() {
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       setErrorMessage(data.error ?? "This recipe could not be saved.");
       return;
     }
@@ -309,6 +332,11 @@ export default function Home() {
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       setErrorMessage(data.error ?? "This recipe could not be deleted.");
       return;
     }
@@ -382,6 +410,11 @@ export default function Home() {
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       setErrorMessage(data.error ?? "This note could not be saved.");
       return;
     }
@@ -397,6 +430,11 @@ export default function Home() {
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       setErrorMessage(data.error ?? "This note could not be deleted.");
       return;
     }
@@ -421,6 +459,11 @@ export default function Home() {
 
     const data = (await response.json()) as { error?: string };
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       setErrorMessage(data.error ?? "This shopping item could not be saved.");
       return;
     }
@@ -441,6 +484,11 @@ export default function Home() {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        expireSession();
+        return;
+      }
+
       await fetchRecipes();
     }
   }
